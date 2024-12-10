@@ -1,6 +1,3 @@
-### Описание `docker-compose.yml`
-
-
 #### Сервисы
 
 **1. PostgreSQL**
