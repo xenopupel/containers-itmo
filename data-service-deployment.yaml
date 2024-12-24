@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-service
+  namespace: myproject
+  labels:
+    app: "data-service"
+    tier: "backend"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "data-service"
+      tier: "backend"
+  template:
+    metadata:
+      labels:
+        app: "data-service"
+        tier: "backend"
+    spec:
+      containers:
+        - name: data-service
+          image: xenopupel/data-service:v1.1
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: myproject-secrets
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: "/"
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: "/"
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

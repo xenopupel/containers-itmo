@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  namespace: myproject
+  labels:
+    app: "airflow"
+    tier: "frontend"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "airflow"
+      tier: "frontend"
+  template:
+    metadata:
+      labels:
+        app: "airflow"
+        tier: "frontend"
+    spec:
+      containers:
+        - name: airflow
+          image: xenopupel/airflow-good:v1.0
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: myproject-secrets
+                  key: POSTGRES_PASSWORD
+            - name: AIRFLOW__CORE__EXECUTOR
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: AIRFLOW__CORE__EXECUTOR
+          command: ["/entrypoint.sh"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: airflow-dags
+              mountPath: /opt/airflow/dags
+            - name: airflow-logs
+              mountPath: /opt/airflow/logs
+            - name: airflow-temperatures
+              mountPath: /opt/airflow/temperatures
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: airflow-dags
+          hostPath:
+            path: /mnt/containers/lab4/airflow/dags
+            type: Directory
+        - name: airflow-logs
+          emptyDir: {}
+        - name: airflow-temperatures
+          hostPath:
+            path: /mnt/containers/temperatures
+            type: Directory

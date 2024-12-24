@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: myproject
+  labels:
+    app: "postgres"
+    tier: "backend"
+spec:
+  type: ClusterIP
+  selector:
+    app: "postgres"
+    tier: "backend"
+  ports:
+    - port: 5432
+      targetPort: 5432
