@@ -18,6 +18,46 @@ spec:
         app: "postgres"
         tier: "backend"
     spec:
+      initContainers:
+        - name: init-postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: myproject-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: myproject-secrets
+                  key: POSTGRES_PASSWORD
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              echo "Создаём таблицы в базе данных..."
+              psql -h "$POSTGRES_HOST" \
+                   -U "$POSTGRES_USER" \
+                   -d "$POSTGRES_DB" \
+                   -p "$POSTGRES_PORT" \
+                   -c "CREATE TABLE IF NOT EXISTS my_table (id SERIAL PRIMARY KEY, name VARCHAR(255));"
+              
       containers:
         - name: postgres
           image: postgres:15
